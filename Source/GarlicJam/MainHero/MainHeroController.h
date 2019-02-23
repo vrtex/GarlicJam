@@ -22,6 +22,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 		void changeCamera();
 
+
+
 	
 protected:
 	UPROPERTY(BlueprintReadOnly)

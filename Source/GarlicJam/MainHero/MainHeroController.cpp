@@ -9,7 +9,8 @@ void AMainHeroController::updateDirection(FVector direction)
 {
 	if(!controlledHero)
 		return;
-	controlledHero->AddMovementInput(direction.GetSafeNormal());
+	controlledHero->updateDirection(direction);
+	// controlledHero->AddMovementInput(direction.GetSafeNormal());
 }
 
 void AMainHeroController::Possess(APawn * PawnToPossess)

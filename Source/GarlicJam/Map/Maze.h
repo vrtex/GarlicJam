@@ -6,19 +6,25 @@
 #include "GameFramework/Actor.h"
 #include "Maze.generated.h"
 
-struct Node
+class ATile;
+
+USTRUCT(BlueprintType, Blueprintable)
+struct FMazeNode
 {
-	Node(int x, int y) { this->x = x; this->y = y; }
-	int32 x, y;
-	Node * left = nullptr,* right = nullptr, * up = nullptr, * down = nullptr;
+	GENERATED_BODY()
+
+	FMazeNode() {}
+	FMazeNode(int x, int y) { this->x = x; this->y = y; }
+		int32 x;
+		int32 y;
+	FMazeNode * left = nullptr,* right = nullptr, * up = nullptr, * down = nullptr;
 	bool wallLeft = true, wallRight = true, wallUp = true, wallDown = true;
-	bool visited = false;
 
-	TArray<Node *> getNeighbours() const;
+	TArray<FMazeNode *> getNeighbours() const;
 
-	Node * getRandomNext() const;
+	FMazeNode * getRandomNext() const;
 
-	void deleteWallTo(Node * next);
+	void deleteWallTo(FMazeNode * next);
 };
 
 UCLASS()
@@ -45,9 +51,16 @@ public:
 		void AddTile(int32 x, int32 y, bool leftWall, bool rightWall, bool upWall, bool downWall);
 
 protected:
+	UPROPERTY(BlueprintReadOnly)
+		TArray<FMazeNode> maze;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<ATile> tileClass;
+
 	UPROPERTY(EditAnywhere)
 		int32 xSize;
 	UPROPERTY(EditAnywhere)
 		int32 ySize;
+
 	
 };

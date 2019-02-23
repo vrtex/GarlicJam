@@ -1,23 +1,25 @@
 // GarlicJam 2019
 
 #include "Maze.h"
+#include "Runtime/Engine/Classes/Engine/World.h"
+#include "Map/Tile.h"
 
 
-TArray<Node*> Node::getNeighbours() const
+TArray<FMazeNode*>FMazeNode::getNeighbours() const
 {
-	TArray<Node *> toReturn;
+	TArray<FMazeNode *> toReturn;
 
-	if(left && !left->visited) toReturn.Add(left);
-	if(right && !right->visited) toReturn.Add(right);
-	if(up && !up->visited) toReturn.Add(up);
-	if(down && !down->visited) toReturn.Add(down);
+	if(left) toReturn.Add(left);
+	if(right) toReturn.Add(right);
+	if(up) toReturn.Add(up);
+	if(down) toReturn.Add(down);
 
 	return toReturn;
 }
 
-Node * Node::getRandomNext() const
+FMazeNode *FMazeNode::getRandomNext() const
 {
-	TArray<Node *> neigh = getNeighbours();
+	TArray<FMazeNode *> neigh = getNeighbours();
 
 	if(neigh.Num() == 0)
 		return nullptr;
@@ -27,7 +29,7 @@ Node * Node::getRandomNext() const
 	return neigh[index];
 }
 
-void Node::deleteWallTo(Node * next)
+void FMazeNode::deleteWallTo(FMazeNode * next)
 {
 	if(next == left)
 	{
@@ -78,57 +80,84 @@ void AMaze::Tick(float DeltaTime)
 
 void AMaze::generateMaze()
 {
-	TArray<Node *> maze;
 	for(int32 y = 0; y < ySize; ++y)
 	{
 		for(int32 x = 0; x < xSize; ++x)
 		{
-			maze.Push(new Node(x, y));
+			maze.Push(FMazeNode(x, y));
 		}
 	}
 
 
-	for(Node * e : maze)
+
+	for(FMazeNode e : maze)
 	{
-		int32 index = e->x + e->y * xSize;
-		if(e->x > 0)
-			e->left = maze[index - 1];
-		if(e->x < xSize - 2)
-			e->right = maze[index + 1];
-		if(e->y > 0)
-			e->up = maze[index - xSize];
-		if(e->y < ySize - 2)
-			e->down = maze[index + xSize];
+		int32 index = e.x + e.y * xSize;
+		if(e.x > 0)
+			e.left = &maze[index - 1];
+		if(e.x < xSize - 2)
+			e.right = &maze[index + 1];
+		if(e.y > 0)
+			e.up = &maze[index - xSize];
+		if(e.y < ySize - 2)
+			e.down = &maze[index + xSize];
 	}
 
-	TArray<Node *> unvisited = maze;
-	TArray<Node *> path;
 
-	Node * current = maze[0];
-	current->visited = true;
-	unvisited.Remove(current);
 
-	while(unvisited.Num() > 0)
+	TArray<FMazeNode *> path;
+
+	FMazeNode * current = &maze[0];
+
+	while(current)
 	{
-		Node * nextCell = current->getRandomNext();
+		FMazeNode * nextCell = current->getRandomNext();
 
 		if(nextCell)
 		{
 			path.Push(current);
 			current->deleteWallTo(nextCell);
 			current = nextCell;
-			current->visited = true;
-			unvisited.Remove(current);
 		}
-		else
+		else if(path.Num() > 0)
 			current = path.Pop();
+		else
+			current = nullptr;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Size: %i"), maze.Num());
-	return;
 
-	for(Node * e : maze)
-		AddTile(e->x, e->y, e->wallLeft, e->wallRight, e->wallUp, e->wallDown);
+	/*
+	for(FMazeNode e : maze)
+		AddTile(e.x, e.y, e.wallLeft, e.wallRight, e.wallUp, e.wallDown);
+	*/
 
-	for(Node * e : maze)
-		delete e;
+
+	TArray<ATile *> tiles;
+	for(int32 y = 0; y < ySize; ++y)
+	{
+		for(int32 x = 0; x < xSize; ++x)
+		{
+			tiles.Add(GetWorld()->SpawnActor<ATile>(tileClass.Get(), GetActorTransform()));
+		}
+	}
+
+	for(int32 y = 0; y < ySize; ++y)
+	{
+		for(int32 x = 0; x < xSize; ++x)
+		{
+			int32 index = x + xSize * y;
+			ATile * current = tiles[index];
+			if(index > 0)
+				current->left = tiles[index - 1];
+			if(index < xSize - 1)
+				current->right = tiles[index + 1];
+			if(index < ySize - 1)
+				current->up = tiles[index + xSize];
+			if(index > xSize)
+				current->down = tiles[index - xSize];
+		}
+	}
+
+	tiles[0]->test();
+	tiles[0]->alignUp();
+
 }

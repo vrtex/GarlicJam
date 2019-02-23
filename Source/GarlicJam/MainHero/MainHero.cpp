@@ -32,3 +32,7 @@ void AMainHero::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+void AMainHero::updateDirection(FVector direction)
+{
+	AddMovementInput(direction.GetSafeNormal());
+}
