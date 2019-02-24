@@ -28,5 +28,7 @@ public:
 
 	void updateDirection(FVector direction);
 
+	UPROPERTY(BlueprintReadOnly)
+		FVector lastMovementDirection;
 	
 };
